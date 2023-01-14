@@ -1,0 +1,15 @@
+[package]
+name = "autoix"
+version = "0.1.0"
+authors = []
+edition = "2018"
+
+[lib]
+name = "autoix"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+enigo = "0.0.14"
+pistoncore-input = "1.0.1"
+rustler = "0.26.0"
