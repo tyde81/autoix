@@ -24,7 +24,7 @@ defmodule Autoix.Flow do
     quote do
       import unquote(Autoix.Mouse)
       import unquote(Autoix.Keyboard)
-      import unquote(Process)
+      import unquote(Autoix.Utils)
 
       @tasks {unquote(title_id), unquote(title)}
       def unquote(title_id)(), do: unquote(do_block)
