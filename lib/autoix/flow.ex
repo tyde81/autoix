@@ -18,7 +18,7 @@ defmodule Autoix.Flow do
     end
   end
 
-  defmacro task(title, do: do_block) do
+  defmacro task(title, opts \\ [], do: do_block) do
     title_id = String.to_atom(title)
 
     quote do
@@ -26,7 +26,7 @@ defmodule Autoix.Flow do
       import unquote(Autoix.Keyboard)
       import unquote(Autoix.Utils)
 
-      @tasks {unquote(title_id), unquote(title)}
+      @tasks {unquote(title_id), unquote(title), unquote(opts)}
       def unquote(title_id)(), do: unquote(do_block)
     end
   end
@@ -34,12 +34,16 @@ defmodule Autoix.Flow do
   def each_run(file, tasks, module) do
     [flow_name | _t] = Path.split(file) |> Enum.reverse()
 
+    tasks = tasks |> Enum.filter(fn {_fn_name, _title, opts} -> opts[:run] !== false end)
+
     Logger.info("======= #{flow_name} =======", ansi_color: :green)
 
-    tasks |> Enum.reverse() |> Enum.each(fn task -> apply_function(module, task) end)
+    tasks
+    |> Enum.reverse()
+    |> Enum.each(fn task -> apply_function(module, task) end)
   end
 
-  def apply_function(module, {fn_name, title}) do
+  def apply_function(module, {fn_name, title, _opts}) do
     case apply(module, fn_name, []) do
       {:error, reason} ->
         Logger.error("#{title} failed.")
