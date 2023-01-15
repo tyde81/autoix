@@ -41,13 +41,13 @@ defmodule Autoix.Flow do
 
   def apply_function(module, {fn_name, title}) do
     case apply(module, fn_name, []) do
-      {:ok, _result} ->
-        Logger.log(:notice, "#{title} was executed succesfully.")
-
       {:error, reason} ->
         Logger.error("#{title} failed.")
 
         Logger.error(reason)
+
+      _ ->
+        Logger.log(:notice, "#{title} was executed succesfully.")
     end
   end
 end
