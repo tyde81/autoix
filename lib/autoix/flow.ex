@@ -5,8 +5,11 @@ defmodule Autoix.Flow do
     quote do
       import unquote(__MODULE__)
 
+      Module.register_attribute(__MODULE__, :config, [])
       Module.register_attribute(__MODULE__, :flux_name, [])
       Module.register_attribute(__MODULE__, :tasks, accumulate: true)
+
+      @config [run: true]
 
       @before_compile unquote(__MODULE__)
     end
@@ -15,6 +18,7 @@ defmodule Autoix.Flow do
   defmacro __before_compile__(env) do
     quote do
       def run, do: each_run(unquote(env.file), @tasks, __MODULE__)
+      def get_config, do: @config
     end
   end
 

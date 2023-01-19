@@ -1,4 +1,4 @@
-defmodule Autoix.Api do
+defmodule Autoix.Backend do
   defmacro __using__(opts) do
     quote do
       import unquote(__MODULE__)
