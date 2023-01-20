@@ -9,32 +9,37 @@ defmodule Mix.Tasks.Autoix.Run do
 
     modules =
       files
-      |> Enum.map(fn f ->
-        f
-        |> Path.split()
-        |> Enum.reverse()
-        |> hd
-        |> String.replace(~r/\.ex$/, "")
-        |> Macro.camelize()
+      |> Enum.map(fn path ->
+        module =
+          path
+          |> Path.split()
+          |> Enum.reverse()
+          |> hd
+          |> String.replace(~r/\.ex$/, "")
+          |> Macro.camelize()
+
+        {module, path}
       end)
 
     modules |> Enum.map(&load/1) |> Task.await_many() |> show_message(ms)
   end
 
-  def load(module) do
+  def load({module, path}) do
     Task.async(fn ->
       module = Module.concat("Flows", module)
 
-      config = apply(module, :get_config, [])
+      case Code.ensure_compiled(module) do
+        {:module, _module} ->
+          config = apply(module, :get_config, [])
 
-      if config[:run] do
-        case Code.ensure_compiled(module) do
-          {:module, _module} ->
+          if config[:run] do
             apply(module, :run, [])
+          end
 
-          {:error, :nofile} ->
-            Mix.shell().info("No flow was found.")
-        end
+        {:error, :nofile} ->
+          {{:module, module, _, _}, _} = Code.eval_file(path)
+
+          load({module, path})
       end
     end)
   end
