@@ -10,18 +10,27 @@ defmodule Mix.Tasks.Autoix.Run do
     modules =
       files
       |> Enum.map(fn path ->
-        module =
-          path
-          |> Path.split()
-          |> Enum.reverse()
-          |> hd
-          |> String.replace(~r/\.ex$/, "")
-          |> Macro.camelize()
-
-        {module, path}
+        precompile(path)
       end)
 
     modules |> Enum.each(&load/1) |> show_message(ms)
+  end
+
+  def precompile(path) do
+    module =
+      path
+      |> Path.split()
+      |> Enum.reverse()
+      |> hd
+      |> String.replace(~r/\.ex$/, "")
+      |> Macro.camelize()
+
+    case Code.ensure_compiled(Module.concat("Flows", module)) do
+      {:error, :nofile} -> Code.compile_file(path)
+      _ -> nil
+    end
+
+    {module, path}
   end
 
   def load({module, path}) do
@@ -33,9 +42,9 @@ defmodule Mix.Tasks.Autoix.Run do
           apply_function(module)
 
         {:error, :nofile} ->
-          {{:module, module, _, _}, _} = Code.eval_file(path)
+          [{module, _binary}] = Code.compile_file(path)
 
-          apply_function(module)
+          load({module, path})
       end
     end)
     |> Task.await()

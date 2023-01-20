@@ -10,7 +10,10 @@ defmodule Autoix.Utils do
   end
 
   defmacro goto(fn_name, module) when is_binary(fn_name) and not is_nil(module) do
+    {:__aliases__, _, [mod]} = module
+
     fun = String.to_atom(fn_name)
+    module = Module.concat(["Flows", mod])
 
     quote do
       case Keyword.has_key?(unquote(module).__info__(:functions), unquote(fun)) do
