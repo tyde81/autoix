@@ -21,7 +21,7 @@ defmodule Mix.Tasks.Autoix.Run do
         {module, path}
       end)
 
-    modules |> Enum.map(&load/1) |> Task.await_many() |> show_message(ms)
+    modules |> Enum.each(&load/1) |> show_message(ms)
   end
 
   def load({module, path}) do
@@ -38,6 +38,7 @@ defmodule Mix.Tasks.Autoix.Run do
           apply_function(module)
       end
     end)
+    |> Task.await()
   end
 
   def apply_function(module) do
