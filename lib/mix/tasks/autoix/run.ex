@@ -30,18 +30,22 @@ defmodule Mix.Tasks.Autoix.Run do
 
       case Code.ensure_compiled(module) do
         {:module, _module} ->
-          config = apply(module, :get_config, [])
-
-          if config[:run] do
-            apply(module, :run, [])
-          end
+          apply_function(module)
 
         {:error, :nofile} ->
           {{:module, module, _, _}, _} = Code.eval_file(path)
 
-          load({module, path})
+          apply_function(module)
       end
     end)
+  end
+
+  def apply_function(module) do
+    config = apply(module, :get_config, [])
+
+    if config[:run] do
+      apply(module, :run, [])
+    end
   end
 
   def show_message(_, ms) do
