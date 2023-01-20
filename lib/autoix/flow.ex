@@ -5,11 +5,11 @@ defmodule Autoix.Flow do
     quote do
       import unquote(__MODULE__)
 
-      Module.register_attribute(__MODULE__, :config, [])
-      Module.register_attribute(__MODULE__, :flux_name, [])
+      Module.register_attribute(__MODULE__, :name, [])
+      Module.register_attribute(__MODULE__, :run, [])
       Module.register_attribute(__MODULE__, :tasks, accumulate: true)
 
-      @config [run: true]
+      @run true
 
       @before_compile unquote(__MODULE__)
     end
@@ -17,8 +17,8 @@ defmodule Autoix.Flow do
 
   defmacro __before_compile__(env) do
     quote do
-      def run, do: each_run(unquote(env.file), @tasks, __MODULE__)
-      def get_config, do: @config
+      def run, do: each_run(unquote(env.file), @tasks, __MODULE__, get_config())
+      def get_config, do: [name: @name, run: @run]
     end
   end
 
@@ -35,16 +35,18 @@ defmodule Autoix.Flow do
     end
   end
 
-  def each_run(file, tasks, module) do
-    [flow_name | _t] = Path.split(file) |> Enum.reverse()
+  def each_run(file, tasks, module, config) do
+    if config[:run] do
+      [flow_name | _t] = Path.split(file) |> Enum.reverse()
 
-    tasks = tasks |> Enum.filter(fn {_fn_name, _title, opts} -> opts[:run] !== false end)
+      tasks = tasks |> Enum.filter(fn {_fn_name, _title, opts} -> opts[:run] !== false end)
 
-    Logger.info("======= #{flow_name} =======", ansi_color: :green)
+      Logger.info("======= #{config[:name] || flow_name} =======", ansi_color: :green)
 
-    tasks
-    |> Enum.reverse()
-    |> Enum.each(fn task -> apply_function(module, task) end)
+      tasks
+      |> Enum.reverse()
+      |> Enum.each(fn task -> apply_function(module, task) end)
+    end
   end
 
   def apply_function(module, {fn_name, title, _opts}) do
